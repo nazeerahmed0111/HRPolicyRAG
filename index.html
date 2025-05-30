@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HR Assistant Chat</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div class="chat-header">💼 HR Assistant</div>
+
+  <div class="chat-container" id="chat"></div>
+
+  <div class="input-container">
+    <input id="question" placeholder="Type your question..." autocomplete="off" />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById("question");
+      const chat = document.getElementById("chat");
+      const question = input.value.trim();
+
+      if (!question) return;
+
+      addMessage(question, 'user');
+      input.value = "";
+      input.focus();
+
+      try {
+        const res = await fetch("http://localhost:8000/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question })
+        });
+
+        const data = await res.json();
+        addMessage(data.answer, 'bot');
+      } catch (err) {
+        addMessage("⚠️ Error fetching response from backend.", 'bot');
+        console.error(err);
+      }
+
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function addMessage(text, sender) {
+      const chat = document.getElementById("chat");
+      const div = document.createElement("div");
+      div.className = `message ${sender}`;
+      div.innerText = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    document.getElementById('question').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
